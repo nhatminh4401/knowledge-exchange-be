@@ -1,0 +1,13 @@
+{
+    "builds": [{
+        "src": "KNOWLEDGE_EXCHANGE_BE/wsgi.py",
+        "use": "@vercel/python",
+        "config": { "maxLambdaSize": "15mb", "runtime": "python3.9" }
+    }],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "KNOWLEDGE_EXCHANGE_BE/wsgi.py"
+        }
+    ]
+}
