@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
+MEDIA_URL='/Photos/'
+MEDIA_ROOT=os.path.join(BASE_DIR,'Photos')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,9 +42,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "corsheaders",
+    "UserApp.apps.UserappConfig",
 ]
 
+CORS_ORIGIN_ALLOW_ALL = True # enable all domains to access apis
+
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -75,8 +86,11 @@ WSGI_APPLICATION = "KNOWLEDGE_EXCHANGE_BE.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "djongo",
+        "CLIENT": {
+            "host": "mongodb+srv://doadmin:159By43knhcQ786m@db-mongodb-19httt6-89e9a7ad.mongo.ondigitalocean.com/admin?tls=true&authSource=admin",
+            "name": "main", "authMechanism": "SCRAM-SHA-1"
+        }
     }
 }
 
