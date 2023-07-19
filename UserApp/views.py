@@ -11,7 +11,7 @@ from django.core.files.storage import default_storage
 
 @csrf_exempt
 def userApi(request, id=0):
-    if request.method == 'GET': 
+    if request.method == 'GET':
         users = User.objects.all()
         users_serializer = UserSerializer(users, many=True)
         return JsonResponse(users_serializer.data, safe=False)
@@ -34,7 +34,7 @@ def userApi(request, id=0):
         users = User.objects.get(User_ID=id)
         users.delete()
         return JsonResponse("Deleted Succeffully!!", safe=False)
-    
+
 @csrf_exempt
 def SaveFile(request):
     file=request.FILES['file']

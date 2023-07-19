@@ -3,7 +3,8 @@
         "username": "",
         "name": "Phan Minh Hiếu",
         "phone": "0123456789",
-        "email": ""
+        "email": "",
+        "password": ""
     },
     "res": { "code": 200 }
 }
