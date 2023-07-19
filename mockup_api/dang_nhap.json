@@ -1,0 +1,17 @@
+{
+    "req": { "username": "binhieutu", "password": "abcd1234" },
+    "res": {
+        "id": "01293987198237897",
+        "username": "",
+        "name": "Phan Minh Hiếu",
+        "avatar": "link",
+        "age": 20,
+        "address": "Hà Nội",
+        "phone": "0123456789",
+        "email": "",
+        "facebook": "",
+        "twitter": "",
+        "instagram": "",
+        "token": "jwt"
+    }
+}

@@ -1,0 +1,4 @@
+{
+    "request":{ "question_id":1, "answer":"yes"},
+    "response": { "answer_id":1, "answer":"yes", "name":"Phan Minh Hiếu", "avatar":"link"}
+}

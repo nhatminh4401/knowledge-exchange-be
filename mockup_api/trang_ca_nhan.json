@@ -1,0 +1,15 @@
+{
+    "req": {"token":"jwt"},
+    "res": {
+        "name": "Phan Minh Hiếu",
+        "avatar": "link",
+        "age": 20,
+        "address": "Hà Nội",
+        "phone": "0123456789",
+        "email": "",
+        "facebook": "",
+        "twitter": "",
+        "instagram": "",
+        "token": "jwt"
+    }
+}

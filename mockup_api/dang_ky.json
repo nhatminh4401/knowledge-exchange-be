@@ -1,0 +1,9 @@
+{
+    "req": {
+        "username": "",
+        "name": "Phan Minh Hiếu",
+        "phone": "0123456789",
+        "email": ""
+    },
+    "res": { "code": 200 }
+}

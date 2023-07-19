@@ -1,0 +1,12 @@
+{
+    "req": { "user_id": "string", "password": "string" },
+    "res": {
+        "name": "Phan Minh Hiếu",
+        "avatar": "link",
+        "age": 20,
+        "facebook": "",
+        "twitter": "",
+        "instagram": "",
+        "token": "jwt"
+    }
+}
