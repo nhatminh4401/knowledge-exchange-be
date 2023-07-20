@@ -15,6 +15,10 @@ from pathlib import Path
 import os
 import certifi
 
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 MEDIA_URL = '/Photos/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'Photos')
@@ -49,6 +53,8 @@ INSTALLED_APPS = [
     "UserApp.apps.UserappConfig",
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    "QuestionApp.apps.QuestionappConfig",
+    "cloudinary"
 ]
 
 REST_FRAMEWORK = {
@@ -109,14 +115,24 @@ WSGI_APPLICATION = "KNOWLEDGE_EXCHANGE_BE.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "djongo",
+#         "CLIENT": {
+#             "host": "mongodb+srv://doadmin:159By43knhcQ786m@db-mongodb-19httt6-89e9a7ad.mongo.ondigitalocean.com/admin?tls=true&authSource=admin",
+#             "name": "minh", "authMechanism": "SCRAM-SHA-1",
+#             "ssl_ca_certs": certifi.where()
+#         }
+#     }
+# }
 DATABASES = {
-    "default": {
-        "ENGINE": "djongo",
-        "CLIENT": {
-            "host": "mongodb+srv://doadmin:159By43knhcQ786m@db-mongodb-19httt6-89e9a7ad.mongo.ondigitalocean.com/admin?tls=true&authSource=admin",
-            "name": "minh", "authMechanism": "SCRAM-SHA-1",
-            "ssl_ca_certs": certifi.where()
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'defaultdb',
+        'USER': 'doadmin',
+        'PASSWORD': 'AVNS_K5SzVPk_FNY2EGlYeOZ',
+        'HOST': 'db-mysql-19httt6-do-user-14203209-0.b.db.ondigitalocean.com',
+        'PORT': '25060',
     }
 }
 
@@ -155,3 +171,9 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+cloudinary.config(
+    cloud_name="dv7pwtaun",
+    api_key="625243671115174",
+    api_secret="zEMFfEXf4QHAkaPUAVdMrvtPoQo"
+)

@@ -43,7 +43,7 @@ class User(AbstractUser):
     email = models.CharField(max_length=80, unique=True)
     phone = models.CharField(max_length=15)
     role = models.CharField(max_length=50)
-    
+
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
@@ -51,3 +51,4 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+

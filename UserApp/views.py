@@ -7,6 +7,8 @@ from UserApp.models import User
 from UserApp.serializers import UserSerializer
 from django.core.files.storage import default_storage
 
+import json
+from cloudinary import uploader
 from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -19,9 +21,10 @@ from UserApp.tokens import create_jwt_pair_for_user
 
 # Create your views here.
 
+
 @csrf_exempt
 def userApi(request, id=0):
-    if request.method == 'GET': 
+    if request.method == 'GET':
         users = User.objects.all()
         users_serializer = UserSerializer(users, many=True)
         return JsonResponse(users_serializer.data, safe=False)
@@ -44,13 +47,18 @@ def userApi(request, id=0):
         users = User.objects.get(User_ID=id)
         users.delete()
         return JsonResponse("Deleted Succeffully!!", safe=False)
-    
+
+
 @csrf_exempt
 def SaveFile(request):
-    file=request.FILES['file']
-    file_name=default_storage.save(file.name,file)
-    return JsonResponse(file_name,safe=False)
-    
+
+    file = request.FILES['file']
+    # file_name=default_storage.save(file.name,file)
+    result = uploader.upload(file, public_id=file.name,
+                             folder="UserApp", overwrite=True)
+    return JsonResponse(result["url"], safe=False)
+
+
 class SignUpView(generics.GenericAPIView):
     serializer_class = UserSerializer
     permission_classes = []
@@ -64,11 +72,13 @@ class SignUpView(generics.GenericAPIView):
             user = serializer.save()
             refresh = AccessToken.for_user(user)
 
-            response = {"message": "User Created Successfully", "data": serializer.data, "access": str(refresh)}
+            response = {"message": "User Created Successfully",
+                        "data": serializer.data, "access": str(refresh)}
 
             return Response(data=response, status=status.HTTP_201_CREATED)
 
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class LoginView(APIView):
     permission_classes = []

@@ -24,4 +24,5 @@ from django.urls import re_path as url
 urlpatterns = [
     path("admin/", admin.site.urls),
     url(r"^", include("UserApp.urls")),
+    url(r"^", include("QuestionApp.urls")),
 ]
