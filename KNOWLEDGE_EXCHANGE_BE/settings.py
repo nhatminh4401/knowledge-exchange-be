@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 import certifi
@@ -46,9 +47,32 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "UserApp.apps.UserappConfig",
+    'rest_framework_simplejwt',
+    'rest_framework.authtoken',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'NON_FIELD_ERRORS_KEY': 'error',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
 CORS_ORIGIN_ALLOW_ALL = True  # enable all domains to access apis
+
+AUTH_USER_MODEL = "UserApp.User"
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -90,7 +114,7 @@ DATABASES = {
         "ENGINE": "djongo",
         "CLIENT": {
             "host": "mongodb+srv://doadmin:159By43knhcQ786m@db-mongodb-19httt6-89e9a7ad.mongo.ondigitalocean.com/admin?tls=true&authSource=admin",
-            "name": "main", "authMechanism": "SCRAM-SHA-1",
+            "name": "minh", "authMechanism": "SCRAM-SHA-1",
             "ssl_ca_certs": certifi.where()
         }
     }
