@@ -4,3 +4,11 @@
 3. Chạy server: python manage.py runserver
 
 Note: các model nằm trong models.py, api nằm trong views.py, valid dữ liệu trong serializers.py, url nằm trong urls.py, mỗi lần tạo model mới thì gõ python manage.py makemigrations để tạo migration cho models, rồi gõ python manage.py migrate để migrate.
+
+Quy định port:
+- Auth: 8000
+- User: 8001
+- Question: 8002
+- Answer: 8003
+- Review: 8004
+...
