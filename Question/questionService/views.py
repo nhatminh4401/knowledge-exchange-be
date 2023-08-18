@@ -1,15 +1,26 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import requests
-from .models import Question, Category, Tag
+from .models import Question, Category, Tag, ReferenceLink, Image
 from .serializers import QuestionSerializer, CategorySerializer, TagSerializer
 from django.utils.decorators import method_decorator
 from .decorators import jwt_auth_required
 from rest_framework.views import APIView
 import json
+from django.views.decorators.csrf import csrf_exempt
+from cloudinary import uploader
+from django.http.response import JsonResponse
 
 
 # Create your views here.
+@csrf_exempt
+def SaveFile(request):
+    file = request.FILES['file']
+    # file_name=default_storage.save(file.name,file)
+    print(file.name, type(file))
+    result = uploader.upload(file, public_id=file.name, folder="UserApp", overwrite=True)
+    return JsonResponse(result["url"], safe=False)
+
 class CategoryAPI(APIView):
     def get(self, request):
         categories_lst = Category.objects.all()
@@ -59,7 +70,7 @@ class QuestionAPI(APIView):
         question.title = request.data["title"]
         question.content = request.data["content"]
         question.status = "Pending"
-        request_user = requests.get("http://127.0.0.1:8000/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         xml_data = request_user.content
         user_data = json.loads(xml_data.decode("utf-8"))
         question.user = user_data["id"]
@@ -69,6 +80,15 @@ class QuestionAPI(APIView):
         request_tags = request.data["tags_id"].split(",")
         for tag in request_tags:
             question.tags.add(tag)
+        links = request.data["reference_links"].split(",")
+        for link in links:
+            new_link = ReferenceLink.objects.create(content=link, question_ID = question)
+        images = request.FILES.getlist("images")
+        # print(images.name)
+        for image in images:
+            print(type(image))
+            result = uploader.upload(image, public_id=image.name, folder="UserApp", overwrite=True)
+            new_image = Image.objects.create(content = result["url"], question_ID = question)
         
         return Response({"message": "Question added successfully"}, status=300)
 

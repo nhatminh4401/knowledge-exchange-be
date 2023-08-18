@@ -25,7 +25,7 @@ class Question(models.Model):
     title = models.CharField(max_length=100)
     content = models.CharField(max_length=1000)
     status = models.CharField(max_length=50)
-    user = models.CharField(max_length=50)
+    user = models.IntegerField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag, related_name="questions")
     created_date = models.DateTimeField(auto_now_add=True)
@@ -38,3 +38,23 @@ class Question(models.Model):
         db_table = "question"
         verbose_name = 'Question'
         verbose_name_plural = 'Questions'
+        
+class ReferenceLink(models.Model):
+    ref_ID = models.AutoField(primary_key=True)
+    content = models.CharField(max_length=500)
+    question_ID = models.ForeignKey(Question, on_delete=models.CASCADE)
+    
+    class Meta:
+        db_table = "referencelink"
+        verbose_name = 'Reference link'
+        verbose_name_plural = 'Reference links'
+        
+class Image(models.Model):
+    img_ID = models.AutoField(primary_key=True)
+    content = models.CharField(max_length=500)
+    question_ID = models.ForeignKey(Question, on_delete=models.CASCADE)
+    
+    class Meta:
+        db_table = "image"
+        verbose_name = 'Image'
+        verbose_name_plural = 'Images'
