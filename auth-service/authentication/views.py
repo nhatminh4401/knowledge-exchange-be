@@ -1,3 +1,6 @@
+from datetime import timedelta
+import datetime
+import jwt
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
@@ -12,10 +15,12 @@ from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status, generics
+from rest_framework import authentication, permissions
 from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth import authenticate
 
-from authentication.tokens import create_jwt_pair_for_user
+# from authentication.tokens import create_jwt_pair_for_user
+from config.settings import SECRET_KEY
 # from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
@@ -31,10 +36,20 @@ class SignUpView(generics.GenericAPIView):
 
         if serializer.is_valid():
             user = serializer.save()
-            refresh = AccessToken.for_user(user)
+            # refresh = AccessToken.for_user(user)
+            user_info = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'isAdmin': user.is_superuser,
+            'created_at': user.date_joined.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+            }
+            # tokens = create_jwt_pair_for_user(user)
+            secret_key = SECRET_KEY
+            token = jwt.encode({'user_info': user_info, 'exp': datetime.datetime.utcnow() + timedelta(days=1)}, secret_key, algorithm='HS256')
 
             response = {"message": "User Created Successfully",
-                        "data": serializer.data, "access": str(refresh)}
+                        "data": serializer.data, "token": token}
 
             return Response(data=response, status=status.HTTP_201_CREATED)
 
@@ -51,10 +66,18 @@ class LoginView(APIView):
         user = authenticate(username=username, password=password)
 
         if user is not None:
+            user_info = {
+            'id': user.id,
+            'username': username,
+            'email': user.email,
+            'isAdmin': user.is_superuser,
+            'created_at': user.date_joined.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+            }
+            # tokens = create_jwt_pair_for_user(user)
+            secret_key = SECRET_KEY
+            token = jwt.encode({'user_info': user_info, 'exp': datetime.datetime.utcnow() + timedelta(days=1)}, secret_key, algorithm='HS256')
 
-            tokens = create_jwt_pair_for_user(user)
-
-            response = {"message": "Login Successfull", "tokens": tokens}
+            response = {"message": "Login Successfull", "user": user_info, "tokens": token}
             return Response(data=response, status=status.HTTP_200_OK)
 
         else:
@@ -64,3 +87,11 @@ class LoginView(APIView):
         content = {"user": str(request.user), "auth": str(request.auth)}
 
         return Response(data=content, status=status.HTTP_200_OK)
+
+class userApi(APIView):
+    
+    # authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication, authentication.BasicAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    def get(self, request: Request):
+        users = list(User.objects.all().values('email', 'id', 'username'))
+        return Response(users)

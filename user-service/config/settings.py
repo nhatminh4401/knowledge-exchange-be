@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
-    "authentication",
+    "user",
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
 ]
@@ -152,7 +152,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'authservice',
+        'NAME': 'userservice',
         'USER': 'doadmin',
         'PASSWORD': 'AVNS_K5SzVPk_FNY2EGlYeOZ',
         'HOST': 'db-mysql-19httt6-do-user-14203209-0.b.db.ondigitalocean.com',
@@ -160,7 +160,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = "authentication.User"
+AUTH_USER_MODEL = "user.User"
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
