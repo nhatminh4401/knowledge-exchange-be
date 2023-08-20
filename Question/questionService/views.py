@@ -12,7 +12,7 @@ from cloudinary import uploader
 from django.http.response import JsonResponse
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.utils.datastructures import MultiValueDictKeyError
 
 # Create your views here.
 # @csrf_exempt
@@ -24,24 +24,35 @@ from django.core.exceptions import ObjectDoesNotExist
 #     return JsonResponse(result["url"], safe=False)
 
 class CategoryAPI(APIView):
-    def get(self, request):
+    def get(self):
         categories_lst = Category.objects.all()
         srlz = CategorySerializer(categories_lst, many=True)
         return Response(srlz.data)
     
     @method_decorator(jwt_auth_required)
     def post(self, request):
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if user_data["isAdmin"] != True:
+            return Response({"message": "User is not Administator."}, status=403)
         new_cat = Category.objects.create(name=request.data["category_name"])
         return self.get()
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
-        del_cat = Category.objects.get(category_ID = request.data["id"])
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if user_data["isAdmin"] != True:
+            return Response({"message": "User is not Administator."}, status=403)
+        try:
+            del_cat = Category.objects.get(category_ID = request.data["id"])
+        except ObjectDoesNotExist:
+            return Response({"message": "Category not exist."}, status=404)   
         del_cat.delete()
         return self.get()
 
 class TagAPI(APIView):
-    def get(self, request):
+    def get(self):
         tags_lst = Tag.objects.all()
         srlz = TagSerializer(tags_lst, many=True)
         return Response(srlz.data)
@@ -70,6 +81,10 @@ class TagAPI(APIView):
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if user_data["isAdmin"] != True:
+            return Response({"message": "User is not Administator."}, status=403)
         try:
             del_tag = Tag.objects.get(tag_ID = request.data["id"])
         except ObjectDoesNotExist:
@@ -77,7 +92,6 @@ class TagAPI(APIView):
         del_tag.delete()
         return self.get()
         
-
 class QuestionAPI(APIView):
     @method_decorator(jwt_auth_required)
     def post(self, request):
@@ -86,31 +100,26 @@ class QuestionAPI(APIView):
         question.content = request.data["content"]
         question.status = "Pending"
         request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
-        xml_data = request_user.content
-        user_data = json.loads(xml_data.decode("utf-8"))
+        user_data = json.loads(request_user.content)
         question.user = user_data["id"]
         category = Category.objects.get(category_ID = request.data["category_id"])
         question.category = category
         question.save()
-        try:
+        if "tags_id" in request.data.keys():
             request_tags = request.data["tags_id"].split(",")
             for tag in request_tags:
                 question.tags.add(tag)
-        except:
-            pass
-        try:
+        if "reference_links" in request.data.keys():
             links = request.data["reference_links"].split(",")
             for link in links:
                 new_link = ReferenceLink.objects.create(content=link, question_ID = question)
-        except:
-            pass
-        try:
+        if "images" in request.data.keys():
             images = request.FILES.getlist("images")
             for image in images:
-                result = uploader.upload(image, public_id=image.name, folder="UserApp", overwrite=True)
-                new_image = Image.objects.create(content = result["url"], question_ID = question)
-        except:
-            pass
+                new_image = Image.objects.create(question_ID = question)
+                result = uploader.upload(image, public_id=new_image.img_ID, folder="UserApp", overwrite=True)
+                new_image.content = result["url"]
+                new_image.save()
         return Response({"message": "Question added successfully."})
 
     def get(self, request):
@@ -118,7 +127,7 @@ class QuestionAPI(APIView):
         search = ""
         if request.query_params.get("sort"):
             sort = request.query_params.get("sort")
-        if request.query_params.get("order") and request.query_params.get("order") == "desc":
+        if request.query_params.get("order") and request.query_params.get("order") == "desc" and request.query_params.get("sort"):
             sort = "-" + sort
         if request.query_params.get("search"):
             search = request.query_params.get("search")
@@ -144,22 +153,39 @@ class QuestionAPI(APIView):
     @method_decorator(jwt_auth_required)
     def put(self, request):
         try:
-            question =  Question.objects.get(question_ID = request.query_params.get("id"))
+            question =  Question.objects.get(question_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
-        question.title = request.query_params.get("title")
-        question.content = request.query_params.get("content")
-        question.status = request.query_params.get("status")
-        category = Category.objects.get(category_ID = request.query_params.get("category_id"))
-        question.category = category
+        
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if "status" in request.data.keys():
+            if user_data["isAdmin"] == True:
+                question.status = request.data["status"]
+                question.save()
+            else:
+                return Response({"message": "You are not Administator."}, status=403)
+        if user_data["id"] != question.user:
+            return Response({"message": "User does not have permission."}, status=403)
+        if "title" in request.data.keys():
+            question.title = request.data["title"]
+        if "content" in request.data.keys():
+            question.content = request.data["content"]
+        if "category_id" in request.data.keys():
+            category = Category.objects.get(category_ID = request.data["category_id"])
+            question.category = category
         question.updated_date = datetime.now()
         question.save()
         return self.get(request)
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if user_data["id"] != question.user and user_data["isAdmin"] != True:
+            return Response({"message": "User does not have permission."}, status=403)
         try:
-            question =  Question.objects.get(question_ID = request.query_params.get("id"))
+            question =  Question.objects.get(question_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
         question.delete()
@@ -170,19 +196,30 @@ class ReferenceLinkAPI(APIView):
     @method_decorator(jwt_auth_required)
     def post(self, request):
         try:
-            question =  Question.objects.get(question_ID = request.data["question_id"])
+            question =  Question.objects.get(question_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
-        
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if user_data["id"] != question.user and user_data["isAdmin"] != True:
+            return Response({"message": "User does not have permission."}, status=403)
         link  = ReferenceLink.objects.create(content = request.data["content"], question_ID = question)
         return Response({"message": "Link added successfully."})
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
         try:
-            link =  ReferenceLink.objects.get(ref_ID = request.query_params.get("id"))
+            link =  ReferenceLink.objects.get(ref_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Link not exist."}, status=404)
+        try:
+            question =  Question.objects.get(question_ID = link.question_ID)
+        except ObjectDoesNotExist:
+            return Response({"message": "Question not exist."}, status=404)
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if user_data["id"] != question.user and user_data["isAdmin"] != True:
+            return Response({"message": "User does not have permission."}, status=403)
         
         link.delete()
         return Response({"message": "Link deleted successfully."})
@@ -191,20 +228,34 @@ class ImageAPI(APIView):
     @method_decorator(jwt_auth_required)
     def post(self, request):
         try:
-            question =  Question.objects.get(question_ID = request.data["question_id"])
+            question =  Question.objects.get(question_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
-        image_file = request.FILES("image")
-        result = uploader.upload(image_file, public_id=image_file.name, folder="UserApp", overwrite=True)
-        image = Image.objects.create(content = result["url"], question_ID = question)
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if user_data["id"] != question.user and user_data["isAdmin"] != True:
+            return Response({"message": "User does not have permission."}, status=403)
+        image_file = request.FILES["image"]
+        image = Image.objects.create(question_ID = question)
+        result = uploader.upload(image_file, public_id=image.img_ID, folder="UserApp", overwrite=True)
+        image.content = result["url"]
+        image.save()
         return Response({"message": "Image added successfully."})
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
         try:
-            image =  Image.objects.get(img_ID = request.query_params.get("id"))
+            image = Image.objects.get(img_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Image not exist."}, status=404)
-        
+        try:
+            question =  Question.objects.get(question_ID = image.question_ID)
+        except ObjectDoesNotExist:
+            return Response({"message": "Question not exist."}, status=404)
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+        if user_data["id"] != question.user and user_data["isAdmin"] != True:
+            return Response({"message": "User does not have permission."}, status=403)
+        result = uploader.destroy(public_id = "UserApp/" + str(image.img_ID))
         image.delete()
         return Response({"message": "Image deleted successfully."})
