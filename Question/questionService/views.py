@@ -92,27 +92,42 @@ class QuestionAPI(APIView):
         category = Category.objects.get(category_ID = request.data["category_id"])
         question.category = category
         question.save()
-        request_tags = request.data["tags_id"].split(",")
-        
-        for tag in request_tags:
-            question.tags.add(tag)
-        links = request.data["reference_links"].split(",")
-        for link in links:
-            new_link = ReferenceLink.objects.create(content=link, question_ID = question)
-        images = request.FILES.getlist("images")
-        for image in images:
-            result = uploader.upload(image, public_id=image.name, folder="UserApp", overwrite=True)
-            new_image = Image.objects.create(content = result["url"], question_ID = question)
-        
+        try:
+            request_tags = request.data["tags_id"].split(",")
+            for tag in request_tags:
+                question.tags.add(tag)
+        except:
+            pass
+        try:
+            links = request.data["reference_links"].split(",")
+            for link in links:
+                new_link = ReferenceLink.objects.create(content=link, question_ID = question)
+        except:
+            pass
+        try:
+            images = request.FILES.getlist("images")
+            for image in images:
+                result = uploader.upload(image, public_id=image.name, folder="UserApp", overwrite=True)
+                new_image = Image.objects.create(content = result["url"], question_ID = question)
+        except:
+            pass
         return Response({"message": "Question added successfully."})
 
     def get(self, request):
+        sort = "-created_date"
+        search = ""
+        if request.query_params.get("sort"):
+            sort = request.query_params.get("sort")
+        if request.query_params.get("order") and request.query_params.get("order") == "desc":
+            sort = "-" + sort
+        if request.query_params.get("search"):
+            search = request.query_params.get("search")
         if request.query_params.get("id"):
-            question_lst = Question.objects.filter(question_ID = request.query_params.get("id"))
+            question_lst = Question.objects.filter(question_ID = request.query_params.get("id"), title__contains = search).order_by(sort)
         elif request.query_params.get("user"):
-            question_lst = Question.objects.filter(user = request.query_params.get("user"))
+            question_lst = Question.objects.filter(user = request.query_params.get("user"), title__contains = search).order_by(sort)
         else:
-            question_lst = Question.objects.all()
+            question_lst = Question.objects.filter(title__contains = search).order_by(sort)
         if question_lst:
             srlz = QuestionSerializer(question_lst, many=True)
             for data in srlz.data:
