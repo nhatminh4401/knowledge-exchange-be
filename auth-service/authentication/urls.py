@@ -5,10 +5,11 @@ from django.urls import re_path as url
 #     TokenRefreshView,
 # )
 
-from authentication.views import LoginView, SignUpView, userApi
+from authentication.views import LoginView, SignUpView, userApi, ChangePasswordView
 
 urlpatterns = [
     url(r'^user/$', userApi.as_view(), name='userApi'),
     url("register/", SignUpView.as_view(), name="register"),
     url("login/", LoginView.as_view(), name="login"),
+    url('change_password/', ChangePasswordView.as_view(), name='change_password'),
 ]

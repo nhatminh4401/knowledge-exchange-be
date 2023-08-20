@@ -7,7 +7,7 @@ from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
 
 from authentication.models import User
-from authentication.serializers import UserSerializer
+from authentication.serializers import UserSerializer, ChangePasswordSerializer
 from django.core.files.storage import default_storage
 
 import json
@@ -22,6 +22,10 @@ import requests
 
 # from authentication.tokens import create_jwt_pair_for_user
 from config.settings import SECRET_KEY
+from django.utils.decorators import method_decorator
+
+from .decorators import jwt_auth_required
+from django.contrib.auth.hashers import check_password
 # from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
@@ -106,11 +110,6 @@ class LoginView(APIView):
         else:
             return Response(data={"message": "Invalid email or password"})
 
-    def get(self, request: Request):
-        content = {"user": str(request.user), "auth": str(request.auth)}
-
-        return Response(data=content, status=status.HTTP_200_OK)
-
 class userApi(APIView):
     
     # authentication_classes = (authentication.TokenAuthentication, authentication.SessionAuthentication, authentication.BasicAuthentication,)
@@ -118,3 +117,29 @@ class userApi(APIView):
     def get(self, request: Request):
         users = list(User.objects.all().values('email', 'id', 'username'))
         return Response(users)
+    
+class ChangePasswordView(APIView):
+    @method_decorator(jwt_auth_required)
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user_info = request.user_info
+            username = user_info['username']
+            old_password = serializer.validated_data['old_password']
+            new_password = serializer.validated_data['new_password']
+
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            if not check_password(old_password, user.password):
+                return Response({"error": "Old password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.set_password(new_password)
+            user.save()
+
+            return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
