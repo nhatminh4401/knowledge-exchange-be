@@ -5,5 +5,4 @@ from user.views import userApi, create_user
 
 urlpatterns = [
     url(r'^user/$', userApi.as_view()),
-    url('create_user/', create_user),
 ]
