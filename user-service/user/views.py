@@ -56,7 +56,7 @@ class userApi(APIView):
     @method_decorator(jwt_auth_required)
     def get(self, request: Request):
         user_info = request.user_info
-        return Response(user_info)
+        return JsonResponse(user_info)
     
 @api_view(['POST'])
 def create_user(request):
