@@ -56,8 +56,9 @@ class SignUpView(generics.GenericAPIView):
             # tokens = create_jwt_pair_for_user(user)
 
             # Gửi yêu cầu tạo người dùng mới tới User Service
-            user_service_url = 'http://localhost:8002/create_user/'
+            user_service_url = 'http://localhost:8001/user/'
             user_data = {
+                'id': user.id,
                 'username': user.username,
                 'email': user.email,
                 'phone': request.data.get('phone'),
