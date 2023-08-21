@@ -3,12 +3,12 @@ from django.db import models
 
 class Review(models.Model):
     review_ID = models.AutoField(primary_key=True)
-    like = models.IntegerField()
+    like = models.BooleanField()
     rating = models.IntegerField()
     report = models.CharField(max_length=1000)
     user = models.IntegerField()
-    question_ID = models.IntegerField()
-    answer_ID = models.IntegerField()
+    question_ID = models.IntegerField(null=True)
+    answer_ID = models.IntegerField(null=True)
 
     def __str__(self):
         return self.report

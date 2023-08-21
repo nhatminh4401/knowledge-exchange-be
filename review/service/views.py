@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Review
+import requests
 from .serializers import ReviewSerializer
 from django.utils.decorators import method_decorator
 from .decorators import jwt_auth_required
@@ -19,7 +20,7 @@ class ReviewQuestionAPI(APIView):
         review.like = request.data["like"]
         review.rating = request.data["rating"]
         review.report = request.data["report"]
-        request_user = request.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
             "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         xml_data = request_user.content
         user_data = json.loads(xml_data.decode("utf-8"))
@@ -34,6 +35,7 @@ class ReviewQuestionAPI(APIView):
         if request.query_params.get("id"):
             review_lst = Review.objects.filter(
                 question_ID=request.query_params.get("id"))
+        else:
             review_lst = Review.objects.all()
 
         if review_lst:
@@ -46,7 +48,7 @@ class ReviewQuestionAPI(APIView):
     def put(self, request):
         try:
             review = Review.objects.get(
-                question_ID=request.query_params.get("id"))
+                review_ID=request.query_params.get("id"))
         except ObjectDoesNotExist:
             return Response({"message": "Review not exist."}, status=404)
         review.like = request.data["like"]
@@ -54,7 +56,8 @@ class ReviewQuestionAPI(APIView):
         review.report = request.data["report"]
 
         review.save()
-        return self.get(request)
+        serializer = ReviewSerializer(review)
+        return Response({"message": "Review updated successfully.", "data": serializer.data})
 
 
 class ReviewAnswerAPI(APIView):
@@ -64,13 +67,16 @@ class ReviewAnswerAPI(APIView):
         review.like = request.data["like"]
         review.rating = request.data["rating"]
         review.report = request.data["report"]
-        request_user = request.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
             "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         xml_data = request_user.content
         user_data = json.loads(xml_data.decode("utf-8"))
         review.user = user_data["id"]
 
         review.answer_ID = request.data["answer_id"]
+        point = review.like + review.rating
+        requests.put("http://127.0.0.1:8001/user/", headers={
+            "Authorization": request.META.get('HTTP_AUTHORIZATION', '')}, data={"point": point})
         review.save()
 
         return Response({"message": "Review added successfully."})
@@ -79,6 +85,7 @@ class ReviewAnswerAPI(APIView):
         if request.query_params.get("id"):
             review_lst = Review.objects.filter(
                 answer_ID=request.query_params.get("id"))
+        else:
             review_lst = Review.objects.all()
 
         if review_lst:
@@ -97,6 +104,21 @@ class ReviewAnswerAPI(APIView):
         review.like = request.data["like"]
         review.rating = request.data["rating"]
         review.report = request.data["report"]
-
+        point = review.like + review.rating
+        requests.put("http://127.0.0.1:8001/user/", headers={
+            "Authorization": request.META.get('HTTP_AUTHORIZATION', '')}, data={"point": point})
         review.save()
         return self.get(request)
+
+
+class ReviewAPI(APIView):
+    @method_decorator(jwt_auth_required)
+    def delete(self, request):
+        try:
+            review = Review.objects.get(
+                review_ID=request.query_params.get("id"))
+        except ObjectDoesNotExist:
+            return Response({"message": "Review not exist."}, status=404)
+        review.delete()
+
+        return Response({"message": "Question deleted successfully."})
