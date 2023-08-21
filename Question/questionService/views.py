@@ -153,7 +153,7 @@ class QuestionAPI(APIView):
     @method_decorator(jwt_auth_required)
     def put(self, request):
         try:
-            question =  Question.objects.get(question_ID = request.data["id"])
+            question =  Question.objects.get(question_ID = request.query_params.get("id"))
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
         
