@@ -28,12 +28,13 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(username=username, password=password, **extra_fields)
 
 class User(AbstractUser):
-    full_name = models.CharField(max_length=100)
-    avatar = models.CharField(max_length=200)
+    full_name = models.CharField(max_length=100, null=True)
+    avatar = models.CharField(max_length=200, null=True)
     email = models.CharField(max_length=80, unique=True)
     phone = models.CharField(max_length=15)
     role = models.CharField(max_length=50)
     points = models.IntegerField(default=0)
+    updated_date = models.DateTimeField(null=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
