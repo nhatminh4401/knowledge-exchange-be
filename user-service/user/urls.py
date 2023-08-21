@@ -1,6 +1,6 @@
 from unicodedata import name
 from django.urls import re_path as url
-from user.views import userApi, create_user
+from user.views import userApi
 
 
 urlpatterns = [
