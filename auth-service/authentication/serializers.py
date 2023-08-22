@@ -33,3 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
         Token.objects.create(user=user)
 
         return user
+    
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)

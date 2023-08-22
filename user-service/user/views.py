@@ -1,3 +1,4 @@
+import datetime
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
@@ -23,54 +24,73 @@ from rest_framework.decorators import api_view, permission_classes
 
 # Create your views here.
 
-# @csrf_exempt
-# def userApi(request, id=0):
-#     if request.method == 'GET':
-#         users = User.objects.all()
-#         users_serializer = UserSerializer(users, many=True)
-#         return JsonResponse(users_serializer.data, safe=False)
-#     elif request.method == 'POST':
-#         users_data = JSONParser().parse(request)
-#         users_serializer = UserSerializer(data=users_data)
-#         if users_serializer.is_valid():
-#             users_serializer.save()
-#             return JsonResponse("Added Successfully!!", safe=False)
-#         return JsonResponse("Failed to Add.", safe=False)
-#     elif request.method == 'PUT':
-#         users_data = JSONParser().parse(request)
-#         users = User.objects.get(User_ID=users_data['User_ID'])
-#         users_serializer = UserSerializer(users, data=users_data)
-#         if users_serializer.is_valid():
-#             users_serializer.save()
-#             return JsonResponse("Updated Successfully!!", safe=False)
-#         return JsonResponse("Failed to Update.", safe=False)
-#     elif request.method == 'DELETE':
-#         users = User.objects.get(User_ID=id)
-#         users.delete()
-#         return JsonResponse("Deleted Succeffully!!", safe=False)
-
 class userApi(APIView):
-    # def get(self, request: Request):
-    #     users = list(User.objects.all().values('email', 'id', 'username'))
-    #     return Response(users)
     @method_decorator(jwt_auth_required)
     def get(self, request: Request):
         user_info = request.user_info
-        return Response(user_info)
+        return JsonResponse(user_info)
     
-@api_view(['POST'])
-def create_user(request):
-    data = request.data
+    def post(self, request):
+        data = request.data
 
-    # Kiểm tra xem người dùng đã tồn tại chưa
-    username = data.get('username')
-    email = data.get('email')
-    phone = data.get('phone')
+        # Kiểm tra xem người dùng đã tồn tại chưa
+        username = data.get('username')
+        email = data.get('email')
+        phone = data.get('phone')
 
-    if User.objects.filter(username=username).exists():
-        return Response(data={"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(username=username).exists():
+            return Response(data={"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = User(username=username, email=email, phone=phone)
-    user.save()
+        user = User(username=username, email=email, phone=phone)
+        user.save()
 
-    return Response(data={"message": "User created successfully"}, status=status.HTTP_201_CREATED)
+        return Response(data={"message": "User created successfully"}, status=status.HTTP_201_CREATED)
+    
+    @method_decorator(jwt_auth_required)
+    def put(self, request):
+        data = request.data
+        user_info = request.user_info
+        if request.query_params.get("id"):
+            user_id = request.query_params.get("id")
+            if user_info["isAdmin"] == True:
+                try:
+                    user = User.objects.get(id=user_id)
+                except User.DoesNotExist:
+                    return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({"message": "You are not Administator."}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            try:
+                user = User.objects.get(id=user_info['id'])
+            except User.DoesNotExist:
+                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if data.get('username') is not None:
+            if user_info["isAdmin"] == True:
+                user.username = data.get('username')
+            else:
+                return Response({"message": "You are not Administator."}, status=status.HTTP_403_FORBIDDEN)
+           
+        if data.get('email') is not None:
+            email_exists = User.objects.filter(email=data.get('email')).exists()
+            if email_exists:
+                return Response(data={"error": "Email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                user.email = data.get('email')
+        if data.get('phone') is not None:
+            user.phone = data.get('phone')
+        if data.get('full_name') is not None:
+            user.full_name = data.get('full_name')
+        if data.get('avatar') is not None:
+            user.avatar = data.get('avatar')
+        if data.get('role') is not None:
+            if user_info["isAdmin"] == True:
+                user.role = data.get('role')
+            else:
+                return Response({"message": "You are not Administator."}, status=403)
+        if data.get('points') is not None:
+            user.points = data.get('points')
+
+        user.updated_date = datetime.datetime.now()
+        user.save()
+        return Response(data={"message": "User updated successfully"}, status=status.HTTP_200_OK)
