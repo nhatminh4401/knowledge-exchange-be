@@ -27,8 +27,22 @@ from rest_framework.decorators import api_view, permission_classes
 class userApi(APIView):
     @method_decorator(jwt_auth_required)
     def get(self, request: Request):
-        user_info = User.objects.get(id=request.user_info['id'])
-        response = {
+        if request.query_params.get("id"):
+            user_id = request.query_params.get("id")
+            user_info = User.objects.get(id=user_id)
+            response = {
+            'id': user_info.id,
+            'email': user_info.email,
+            'full_name': user_info.full_name,
+            'avatar': user_info.avatar,
+            'points': user_info.points,
+            'created_at': user_info.date_joined.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'updated_at': user_info.updated_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'about': user_info.about,
+        }
+        else:
+            user_info = User.objects.get(id=request.user_info['id'])
+            response = {
             'id': user_info.id,
             'username': user_info.username,
             'email': user_info.email,
@@ -40,6 +54,7 @@ class userApi(APIView):
             'updated_at': user_info.updated_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'about': user_info.about,
         }
+        
         return JsonResponse(response, status=status.HTTP_200_OK)
     
     def post(self, request):
