@@ -36,6 +36,8 @@ else:
     USER_API_URL = "https://user-service-if4z3.ondigitalocean.app/"
 # Application definition
 
+CORS_ORIGIN_ALLOW_ALL = True  # enable all domains to access apis
+
 INSTALLED_APPS = [
     'questionService',
     'django.contrib.admin',

@@ -36,6 +36,7 @@ if DEVELOPMENT_MODE is True:
 else:
     USER_API_URL = "https://user-service-if4z3.ondigitalocean.app/"
 
+CORS_ORIGIN_ALLOW_ALL = True  # enable all domains to access apis
 
 # Application definition
 
