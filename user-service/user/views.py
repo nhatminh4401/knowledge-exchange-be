@@ -27,8 +27,20 @@ from rest_framework.decorators import api_view, permission_classes
 class userApi(APIView):
     @method_decorator(jwt_auth_required)
     def get(self, request: Request):
-        user_info = request.user_info
-        return JsonResponse(user_info)
+        user_info = User.objects.get(id=request.user_info['id'])
+        response = {
+            'id': user_info.id,
+            'username': user_info.username,
+            'email': user_info.email,
+            'phone': user_info.phone,
+            'full_name': user_info.full_name,
+            'avatar': user_info.avatar,
+            'points': user_info.points,
+            'created_at': user_info.date_joined.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'updated_at': user_info.updated_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'about': user_info.about,
+        }
+        return JsonResponse(response, status=status.HTTP_200_OK)
     
     def post(self, request):
         data = request.data
@@ -38,11 +50,12 @@ class userApi(APIView):
         username = data.get('username')
         email = data.get('email')
         phone = data.get('phone')
+        is_superuser = data.get('is_superuser')
 
         if User.objects.filter(username=username).exists():
             return Response(data={"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User(id=id, username=username, email=email, phone=phone)
+        user = User(id=id, username=username, email=email, phone=phone, is_superuser=is_superuser)
         user.save()
 
         return Response(data={"message": "User created successfully"}, status=status.HTTP_201_CREATED)

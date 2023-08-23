@@ -35,6 +35,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=50)
     points = models.IntegerField(default=0)
     updated_date = models.DateTimeField(null=True)
+    about = models.CharField(max_length=300, default="")
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']

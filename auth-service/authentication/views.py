@@ -44,6 +44,7 @@ class SignUpView(generics.GenericAPIView):
             username = request.data.get('username')
             password = request.data.get('password')
             email = request.data.get('email')
+            is_superuser = request.data.get('is_superuser')
             user = User.objects.create_user(username=username, password=password, email=email)
             # refresh = AccessToken.for_user(user)
             user_info = {
@@ -51,7 +52,7 @@ class SignUpView(generics.GenericAPIView):
             'username': user.username,
             'email': user.email,
             'isAdmin': user.is_superuser,
-            'created_at': user.date_joined.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+            'created_at': user.date_joined.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             }
             # tokens = create_jwt_pair_for_user(user)
 
@@ -62,6 +63,7 @@ class SignUpView(generics.GenericAPIView):
                 'username': user.username,
                 'email': user.email,
                 'phone': request.data.get('phone'),
+                'is_superuser': user.is_superuser,
             }
             response = requests.post(user_service_url, json=user_data)
 
