@@ -17,6 +17,8 @@ from django.http import HttpResponse
 from io import StringIO
 import csv
 from .resources import QuestionResource, ReferenceLinkResource, ImageResource
+from tablib import Dataset
+import ast  
 
 # Create your views here.
 # @csrf_exempt
@@ -28,10 +30,19 @@ from .resources import QuestionResource, ReferenceLinkResource, ImageResource
 #     return JsonResponse(result["url"], safe=False)
 
 class CategoryAPI(APIView):
-    def get(self):
-        categories_lst = Category.objects.all()
-        srlz = CategorySerializer(categories_lst, many=True)
-        return Response(srlz.data)
+    def get(self, request):
+        search = ""
+        if request.query_params.get("search"):
+            search = request.query_params.get("search")
+        if request.query_params.get("id"):
+            categories_lst = Category.objects.filter(category_ID = request.query_params.get("id"), name__contains = search)
+        else:
+            categories_lst = Category.objects.all()
+        if categories_lst:
+            srlz = CategorySerializer(categories_lst, many=True)
+            return Response(srlz.data)
+        else:
+            return Response({"message": "Category not exist."}, status=404)
     
     @method_decorator(jwt_auth_required)
     def post(self, request):
@@ -56,10 +67,19 @@ class CategoryAPI(APIView):
         return self.get()
 
 class TagAPI(APIView):
-    def get(self):
-        tags_lst = Tag.objects.all()
-        srlz = TagSerializer(tags_lst, many=True)
-        return Response(srlz.data)
+    def get(self, request):
+        search = ""
+        if request.query_params.get("search"):
+            search = request.query_params.get("search")
+        if request.query_params.get("id"):
+            tags_lst = Tag.objects.filter(tag_ID = request.query_params.get("id"), name__contains = search)
+        else:
+            tags_lst = Tag.objects.all()
+        if tags_lst:
+            srlz = TagSerializer(tags_lst, many=True)
+            return Response(srlz.data)
+        else:
+            return Response({"message": "Tag not exist."}, status=404)  
     
     @method_decorator(jwt_auth_required)
     def post(self, request):
@@ -111,7 +131,11 @@ class QuestionAPI(APIView):
         question.save()
         if "tags_id" in request.data.keys():
             request_tags = request.data["tags_id"].split(",")
-            for tag in request_tags:
+            for t in request_tags:
+                try:
+                    tag = Tag.objects.get(name = t)
+                except ObjectDoesNotExist:
+                    tag = Tag.objects.create(name = t)
                 question.tags.add(tag)
         if "reference_links" in request.data.keys():
             links = request.data["reference_links"].split(",")
@@ -291,27 +315,43 @@ class ResourceView(APIView):
                 data["images"] = images_srlz.data
             
             data = json.loads(json.dumps(srlz.data))
-            print(data)
             csv_buffer = StringIO()
             csv_writer = csv.DictWriter(csv_buffer, fieldnames=["question_ID", "title", "content", "status", "user", "category", "tags", "created_date", "updated_date", "reference_links", "images"])
             csv_writer.writeheader()
             for item in data:
-                print(item)
                 csv_writer.writerow(item)
             csv_data = csv_buffer.getvalue()
-            print(csv_data)
             response = HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename="data.csv"'
             response.write(csv_data)
             return response
         else:
             return Response({"message": "Question not exist."}, status=404)
-        
-    # def post(self, request):
-    #     file = request.FILES['file']
-    #     book_resource = BookResource()
-    #     dataset = book_resource.load()
-    #     result = book_resource.import_data(dataset, dry_run=True)  # Dry run to check validity
 
-    #     if not result.has_errors():
-    #         book_resource.import_data(dataset, dry_run=False)
+    @method_decorator(jwt_auth_required)
+    def post(self, request):
+        file = request.FILES['file']
+        csv_data = file.file.getvalue().decode('utf-8')
+        csv_reader = csv.DictReader(csv_data.splitlines())
+        json_data = json.loads(json.dumps(list(csv_reader), indent=4))
+        for i in json_data:
+            try:
+                category = Category.objects.get(name = i["category"])
+            except ObjectDoesNotExist:
+                return Response({"message": "Category not exist."}, status=404)  
+            request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})  
+            user_data = json.loads(request_user.content)
+            question = Question.objects.create(title = i["title"], content = i["content"],user = user_data["id"], category = category)
+            if "tags" in i.keys():
+                i["tags"] = ast.literal_eval(i["tags"])
+                for t in i["tags"]:
+                    try:
+                        tag = Tag.objects.get(name = t)
+                    except ObjectDoesNotExist:
+                        tag = Tag.objects.create(name = t)
+                    question.tags.add(tag)
+            if "reference_links" in i.keys():
+                i["reference_links"] = ast.literal_eval(i["reference_links"])
+                for link in i["reference_links"]:
+                    new_link = ReferenceLink.objects.create(content=link, question_ID = question)
+        return Response({"message": "Import successfully."})
