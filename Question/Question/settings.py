@@ -30,7 +30,10 @@ ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split("
 
 DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
 
-
+if DEVELOPMENT_MODE is True:
+    USER_API_URL = "http://127.0.0.1:8001/"
+else:
+    USER_API_URL = "https://user-service-if4z3.ondigitalocean.app/"
 # Application definition
 
 INSTALLED_APPS = [

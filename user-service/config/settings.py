@@ -104,7 +104,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-CORS_ORIGIN_ALLOW_ALL = True  # enable all domains to access apis
+# CORS_ORIGIN_ALLOW_ALL = True  # enable all domains to access apis
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",

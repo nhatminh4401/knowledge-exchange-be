@@ -21,7 +21,7 @@ from django.contrib.auth import authenticate
 import requests
 
 # from authentication.tokens import create_jwt_pair_for_user
-from config.settings import SECRET_KEY
+from config.settings import SECRET_KEY, USER_API_URL
 from django.utils.decorators import method_decorator
 
 from .decorators import jwt_auth_required
@@ -56,7 +56,7 @@ class SignUpView(generics.GenericAPIView):
             # tokens = create_jwt_pair_for_user(user)
 
             # Gửi yêu cầu tạo người dùng mới tới User Service
-            user_service_url = 'http://localhost:8001/user/'
+            user_service_url = USER_API_URL + 'user/'
             user_data = {
                 'id': user.id,
                 'username': user.username,

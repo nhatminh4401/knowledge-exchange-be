@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
-
+from config.settings import USER_API_URL
 
 class ReviewQuestionAPI(APIView):
     @method_decorator(jwt_auth_required)
@@ -20,7 +20,7 @@ class ReviewQuestionAPI(APIView):
         review.like = request.data["like"]
         review.rating = request.data["rating"]
         review.report = request.data["report"]
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get(USER_API_URL + "user/", headers={
             "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         xml_data = request_user.content
         user_data = json.loads(xml_data.decode("utf-8"))
@@ -67,7 +67,7 @@ class ReviewAnswerAPI(APIView):
         review.like = request.data["like"]
         review.rating = request.data["rating"]
         review.report = request.data["report"]
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get(USER_API_URL + "user/", headers={
             "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         xml_data = request_user.content
         user_data = json.loads(xml_data.decode("utf-8"))
@@ -75,7 +75,7 @@ class ReviewAnswerAPI(APIView):
 
         review.answer_ID = request.data["answer_id"]
         point = review.like + review.rating
-        requests.put("http://127.0.0.1:8001/user/", headers={
+        requests.put(USER_API_URL + "user/", headers={
             "Authorization": request.META.get('HTTP_AUTHORIZATION', '')}, data={"point": point})
         review.save()
 
@@ -105,7 +105,7 @@ class ReviewAnswerAPI(APIView):
         review.rating = request.data["rating"]
         review.report = request.data["report"]
         point = review.like + review.rating
-        requests.put("http://127.0.0.1:8001/user/", headers={
+        requests.put(USER_API_URL + "user/", headers={
             "Authorization": request.META.get('HTTP_AUTHORIZATION', '')}, data={"point": point})
         review.save()
         return self.get(request)

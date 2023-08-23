@@ -13,6 +13,7 @@ from django.http.response import JsonResponse
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.datastructures import MultiValueDictKeyError
+from Question.settings import USER_API_URL
 
 # Create your views here.
 # @csrf_exempt
@@ -31,7 +32,7 @@ class CategoryAPI(APIView):
     
     @method_decorator(jwt_auth_required)
     def post(self, request):
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["isAdmin"] != True:
             return Response({"message": "User is not Administator."}, status=403)
@@ -40,7 +41,7 @@ class CategoryAPI(APIView):
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["isAdmin"] != True:
             return Response({"message": "User is not Administator."}, status=403)
@@ -81,7 +82,7 @@ class TagAPI(APIView):
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["isAdmin"] != True:
             return Response({"message": "User is not Administator."}, status=403)
@@ -99,7 +100,7 @@ class QuestionAPI(APIView):
         question.title = request.data["title"]
         question.content = request.data["content"]
         question.status = "Pending"
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         question.user = user_data["id"]
         category = Category.objects.get(category_ID = request.data["category_id"])
@@ -157,7 +158,7 @@ class QuestionAPI(APIView):
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
         
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if "status" in request.data.keys():
             if user_data["isAdmin"] == True:
@@ -180,7 +181,7 @@ class QuestionAPI(APIView):
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != question.user and user_data["isAdmin"] != True:
             return Response({"message": "User does not have permission."}, status=403)
@@ -199,7 +200,7 @@ class ReferenceLinkAPI(APIView):
             question =  Question.objects.get(question_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != question.user and user_data["isAdmin"] != True:
             return Response({"message": "User does not have permission."}, status=403)
@@ -216,7 +217,7 @@ class ReferenceLinkAPI(APIView):
             question =  Question.objects.get(question_ID = link.question_ID)
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != question.user and user_data["isAdmin"] != True:
             return Response({"message": "User does not have permission."}, status=403)
@@ -231,7 +232,7 @@ class ImageAPI(APIView):
             question =  Question.objects.get(question_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != question.user and user_data["isAdmin"] != True:
             return Response({"message": "User does not have permission."}, status=403)
@@ -252,7 +253,7 @@ class ImageAPI(APIView):
             question =  Question.objects.get(question_ID = image.question_ID)
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
+        request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != question.user and user_data["isAdmin"] != True:
             return Response({"message": "User does not have permission."}, status=403)
