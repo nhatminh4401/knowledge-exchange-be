@@ -34,6 +34,7 @@ class userApi(APIView):
         data = request.data
 
         # Kiểm tra xem người dùng đã tồn tại chưa
+        id = data.get('id')
         username = data.get('username')
         email = data.get('email')
         phone = data.get('phone')
@@ -41,7 +42,7 @@ class userApi(APIView):
         if User.objects.filter(username=username).exists():
             return Response(data={"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User(username=username, email=email, phone=phone)
+        user = User(id=id, username=username, email=email, phone=phone)
         user.save()
 
         return Response(data={"message": "User created successfully"}, status=status.HTTP_201_CREATED)
