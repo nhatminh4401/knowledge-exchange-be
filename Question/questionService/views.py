@@ -9,11 +9,14 @@ from rest_framework.views import APIView
 import json
 from django.views.decorators.csrf import csrf_exempt
 from cloudinary import uploader
-from django.http.response import JsonResponse
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.datastructures import MultiValueDictKeyError
 from Question.settings import USER_API_URL
+from django.http import HttpResponse
+from io import StringIO
+import csv
+from .resources import QuestionResource, ReferenceLinkResource, ImageResource
 
 # Create your views here.
 # @csrf_exempt
@@ -260,3 +263,55 @@ class ImageAPI(APIView):
         result = uploader.destroy(public_id = "UserApp/" + str(image.img_ID))
         image.delete()
         return Response({"message": "Image deleted successfully."})
+    
+class ResourceView(APIView):
+    def get(self, request):
+        sort = "-created_date"
+        search = ""
+        if request.query_params.get("sort"):
+            sort = request.query_params.get("sort")
+        if request.query_params.get("order") and request.query_params.get("order") == "desc" and request.query_params.get("sort"):
+            sort = "-" + sort
+        if request.query_params.get("search"):
+            search = request.query_params.get("search")
+        if request.query_params.get("id"):
+            question_lst = Question.objects.filter(question_ID = request.query_params.get("id"), title__contains = search).order_by(sort)
+        elif request.query_params.get("user"):
+            question_lst = Question.objects.filter(user = request.query_params.get("user"), title__contains = search).order_by(sort)
+        else:
+            question_lst = Question.objects.filter(title__contains = search).order_by(sort)
+        if question_lst:
+            srlz = QuestionSerializer(question_lst, many=True)
+            for data in srlz.data:
+                links = ReferenceLink.objects.filter(question_ID = int(data["question_ID"]))
+                images = Image.objects.filter(question_ID = int(data["question_ID"]))
+                links_srlz = ReferenceLinkSerializer(links, many = True)
+                images_srlz = ImageSerializer(images, many = True)
+                data["reference_links"] = links_srlz.data
+                data["images"] = images_srlz.data
+            
+            data = json.loads(json.dumps(srlz.data))
+            print(data)
+            csv_buffer = StringIO()
+            csv_writer = csv.DictWriter(csv_buffer, fieldnames=["question_ID", "title", "content", "status", "user", "category", "tags", "created_date", "updated_date", "reference_links", "images"])
+            csv_writer.writeheader()
+            for item in data:
+                print(item)
+                csv_writer.writerow(item)
+            csv_data = csv_buffer.getvalue()
+            print(csv_data)
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="data.csv"'
+            response.write(csv_data)
+            return response
+        else:
+            return Response({"message": "Question not exist."}, status=404)
+        
+    # def post(self, request):
+    #     file = request.FILES['file']
+    #     book_resource = BookResource()
+    #     dataset = book_resource.load()
+    #     result = book_resource.import_data(dataset, dry_run=True)  # Dry run to check validity
+
+    #     if not result.has_errors():
+    #         book_resource.import_data(dataset, dry_run=False)

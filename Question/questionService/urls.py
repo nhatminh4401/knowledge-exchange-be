@@ -7,4 +7,5 @@ urlpatterns = [
     path("tags", views.TagAPI.as_view()),
     path("links", views.ReferenceLinkAPI.as_view()),
     path("images", views.ImageAPI.as_view()),
+    path("resources", views.ResourceView.as_view())
 ]
