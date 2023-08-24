@@ -322,7 +322,7 @@ class ResourceView(APIView):
                 csv_writer.writerow(item)
             csv_data = csv_buffer.getvalue()
             response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="data.csv"'
+            response['Content-Disposition'] = 'attachment; filename="questions.csv"'
             response.write(csv_data)
             return response
         else:
