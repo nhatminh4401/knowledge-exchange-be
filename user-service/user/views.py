@@ -153,6 +153,7 @@ class RankingApi(APIView):
                 'order': index,
                 'id': user.id,
                 'username': user.username,
+                'avatar': user.avatar,
                 'points': user.points
             })
 

@@ -38,4 +38,5 @@ class RankingSerializer(serializers.Serializer):
     order = serializers.IntegerField()
     id = serializers.IntegerField()
     username = serializers.CharField()
+    avatar = serializers.CharField()
     points = serializers.IntegerField()
