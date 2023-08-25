@@ -216,13 +216,13 @@ class QuestionAPI(APIView):
     @method_decorator(jwt_auth_required)
     def delete(self, request):
         request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})
-        user_data = json.loads(request_user.content)
-        if user_data["id"] != question.user and user_data["isAdmin"] != True:
-            return Response({"message": "User does not have permission."}, status=403)
+        user_data = json.loads(request_user.content)        
         try:
             question =  Question.objects.get(question_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Question not exist."}, status=404)
+        if user_data["id"] != question.user and user_data["isAdmin"] != True:
+            return Response({"message": "User does not have permission."}, status=403)
         question.delete()
         
         return Response({"message": "Question deleted successfully."})
