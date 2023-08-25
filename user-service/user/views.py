@@ -29,17 +29,23 @@ class userApi(APIView):
     def get(self, request: Request):
         if request.query_params.get("id"):
             user_id = request.query_params.get("id")
-            user_info = User.objects.get(id=user_id)
+            try:
+                user_info = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
             response = {
             'id': user_info.id,
+            'username': user_info.username,
             'email': user_info.email,
             'full_name': user_info.full_name,
             'avatar': user_info.avatar,
             'points': user_info.points,
             'created_at': user_info.date_joined.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-            'updated_at': user_info.updated_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'updated_at': user_info.updated_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if user_info.updated_date else "",
             'about': user_info.about,
-        }
+            }
+            
         else:
             user_info = User.objects.get(id=request.user_info['id'])
             response = {
@@ -51,9 +57,9 @@ class userApi(APIView):
             'avatar': user_info.avatar,
             'points': user_info.points,
             'created_at': user_info.date_joined.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-            'updated_at': user_info.updated_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'updated_at': user_info.updated_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if user_info.updated_date else "",
             'about': user_info.about,
-        }
+            }
         
         return JsonResponse(response, status=status.HTTP_200_OK)
     
