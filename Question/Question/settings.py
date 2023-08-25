@@ -40,6 +40,7 @@ CORS_ORIGIN_ALLOW_ALL = True  # enable all domains to access apis
 
 INSTALLED_APPS = [
     'questionService',
+    'import_export',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
