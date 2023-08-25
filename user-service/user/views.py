@@ -112,6 +112,8 @@ class userApi(APIView):
             user.full_name = data.get('full_name')
         if data.get('avatar') is not None:
             user.avatar = data.get('avatar')
+        if data.get('about') is not None:
+            user.about = data.get('about')
         if data.get('role') is not None:
             if user_info["isAdmin"] == True:
                 user.role = data.get('role')
@@ -122,4 +124,14 @@ class userApi(APIView):
 
         user.updated_date = datetime.datetime.now()
         user.save()
-        return Response(data={"message": "User updated successfully"}, status=status.HTTP_200_OK)
+        response = {
+        'id': user.id,
+        'email': user.email,
+        'phone': user.phone,
+        'full_name': user.full_name,
+        'avatar': user.avatar,
+        'points': user.points,
+        'updated_at': user.updated_date.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+        'about': user.about
+        }
+        return Response(data={"message": "User updated successfully", "data": response}, status=status.HTTP_200_OK)
