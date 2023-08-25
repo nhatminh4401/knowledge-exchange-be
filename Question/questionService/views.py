@@ -51,7 +51,7 @@ class CategoryAPI(APIView):
         if user_data["isAdmin"] != True:
             return Response({"message": "User is not Administator."}, status=403)
         new_cat = Category.objects.create(name=request.data["category_name"])
-        return self.get()
+        return self.get(request)
     
     @method_decorator(jwt_auth_required)
     def delete(self, request):
@@ -62,9 +62,9 @@ class CategoryAPI(APIView):
         try:
             del_cat = Category.objects.get(category_ID = request.data["id"])
         except ObjectDoesNotExist:
-            return Response({"message": "Category not exist."}, status=404)   
+            return Response({"message": "Category not exist."}, status=404)
         del_cat.delete()
-        return self.get()
+        return self.get(request)
 
 class TagAPI(APIView):
     def get(self, request):
@@ -84,7 +84,7 @@ class TagAPI(APIView):
     @method_decorator(jwt_auth_required)
     def post(self, request):
         new_tag = Tag.objects.create(name=request.data["tag_name"])
-        return self.get()
+        return self.get(request)
     
     @method_decorator(jwt_auth_required)
     def put(self, request):
@@ -113,7 +113,7 @@ class TagAPI(APIView):
         except ObjectDoesNotExist:
             return Response({"message": "Tag not exist."}, status=404)
         del_tag.delete()
-        return self.get()
+        return self.get(request)
         
 class QuestionAPI(APIView):
     @method_decorator(jwt_auth_required)
