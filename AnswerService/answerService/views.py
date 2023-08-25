@@ -13,7 +13,7 @@ from django.http.response import JsonResponse
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.datastructures import MultiValueDictKeyError
-
+from Answer.settings import USER_API_URL
 # Create your views here.
 
 
@@ -34,7 +34,7 @@ class AnswerAPI(APIView):
     #     answer.title = request.data["title"]
     #     answer.content = request.data["content"]
     #     answer.question_ID = request.data["question_id"]
-    #     request_user = requests.get("https://user-service-if4z3.ondigitalocean.app/user/", headers={
+    #     request_user = requests.get(USER_API_URL + "user/", headers={
     #                                 "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
     #     url = "https://question-service-8hs54.ondigitalocean.app/questions?id={answer.answer_ID}"
 
@@ -91,7 +91,7 @@ class AnswerAPI(APIView):
         answer.content = request.data["content"]
 
         user_data = None
-        user_response = requests.get("https://user-service-if4z3.ondigitalocean.app/user/", headers={
+        user_response = requests.get(USER_API_URL + "user/", headers={
             "Authorization": request.META.get('HTTP_AUTHORIZATION', '')
         })
 
@@ -185,7 +185,7 @@ class AnswerAPI(APIView):
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
 
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get(USER_API_URL + "user/", headers={
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if "status" in request.data.keys():
@@ -210,7 +210,7 @@ class AnswerAPI(APIView):
 
     @method_decorator(jwt_auth_required)
     def delete(self, request):
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get(USER_API_URL + "user/" headers={
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != answer.user and user_data["isAdmin"] != True:
@@ -231,7 +231,7 @@ class ReferenceLinkAPI(APIView):
             answer = Answer.objects.get(answer_ID=request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get(USER_API_URL + "user/" headers={
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != answer.user and user_data["isAdmin"] != True:
@@ -250,7 +250,7 @@ class ReferenceLinkAPI(APIView):
             answer = Answer.objects.get(answer_ID=link.answer_ID)
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get(USER_API_URL + "user/" headers={
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != answer.user and user_data["isAdmin"] != True:
@@ -267,7 +267,7 @@ class ImageAPI(APIView):
             answer = Answer.objects.get(answer_ID=request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get(USER_API_URL + "user/" headers={
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != answer.user and user_data["isAdmin"] != True:
@@ -290,7 +290,7 @@ class ImageAPI(APIView):
             answer = Answer.objects.get(answer_ID=image.answer_ID)
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
-        request_user = requests.get("http://127.0.0.1:8001/user/", headers={
+        request_user = requests.get(USER_API_URL + "user/" headers={
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
         if user_data["id"] != answer.user and user_data["isAdmin"] != True:
