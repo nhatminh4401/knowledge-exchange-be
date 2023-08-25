@@ -13,6 +13,7 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from config.settings import USER_API_URL
 
+
 class ReviewQuestionAPI(APIView):
     @method_decorator(jwt_auth_required)
     def post(self, request):
@@ -35,7 +36,7 @@ class ReviewQuestionAPI(APIView):
         if request.query_params.get("id"):
             if request.query_params.get("like"):
                 review_lst = Review.objects.filter(
-                question_ID=request.query_params.get("id"), like = request.query_params.get("like"))
+                    question_ID=request.query_params.get("id"), like=request.query_params.get("like"))
             else:
                 review_lst = Review.objects.filter(
                     question_ID=request.query_params.get("id"))
@@ -116,6 +117,26 @@ class ReviewAnswerAPI(APIView):
 
 
 class ReviewAPI(APIView):
+    @method_decorator(jwt_auth_required)
+    def get(self, request):
+        user_response = requests.get("https://user-service-if4z3.ondigitalocean.app/user/", headers={
+            "Authorization": request.META.get('HTTP_AUTHORIZATION', '')
+        })
+
+        if user_response.status_code == 200:
+            user_data = json.loads(user_response.content)
+        else:
+            return Response({"message": "User not found."}, status=404)
+
+        review_user_id = user_data.get("id")
+        if not review_user_id:
+            return Response({"message": "User data does not contain ID."}, status=400)
+
+        review = Review.objects.filter(user=review_user_id)
+        if not review:
+            return Response({"message": "No review found for the given user."}, status=404)
+        return Response(ReviewSerializer(review, many=True).data, status=200)
+
     @method_decorator(jwt_auth_required)
     def delete(self, request):
         try:
