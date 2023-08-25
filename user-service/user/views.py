@@ -36,6 +36,7 @@ class userApi(APIView):
 
             response = {
             'id': user_info.id,
+            'isAdmin': user_info.is_superuser,
             'username': user_info.username,
             'email': user_info.email,
             'full_name': user_info.full_name,
@@ -50,6 +51,7 @@ class userApi(APIView):
             user_info = User.objects.get(id=request.user_info['id'])
             response = {
             'id': user_info.id,
+            'isAdmin': user_info.is_superuser,
             'username': user_info.username,
             'email': user_info.email,
             'phone': user_info.phone,
