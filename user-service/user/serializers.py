@@ -33,3 +33,9 @@ class UserSerializer(serializers.ModelSerializer):
         Token.objects.create(user=user)
 
         return user
+
+class RankingSerializer(serializers.Serializer):
+    order = serializers.IntegerField()
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    points = serializers.IntegerField()

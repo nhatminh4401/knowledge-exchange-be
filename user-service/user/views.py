@@ -5,7 +5,7 @@ from rest_framework.parsers import JSONParser
 from django.http.response import JsonResponse
 
 from user.models import User
-from user.serializers import UserSerializer
+from user.serializers import UserSerializer, RankingSerializer
 from django.core.files.storage import default_storage
 
 import json
@@ -126,6 +126,7 @@ class userApi(APIView):
         user.save()
         response = {
         'id': user.id,
+        'username': user.username,
         'email': user.email,
         'phone': user.phone,
         'full_name': user.full_name,
@@ -135,3 +136,26 @@ class userApi(APIView):
         'about': user.about
         }
         return Response(data={"message": "User updated successfully", "data": response}, status=status.HTTP_200_OK)
+    
+class RankingApi(APIView):
+    def get(self, request):
+        # Sắp xếp người dùng theo điểm số giảm dần
+        if request.query_params.get("limit"):
+            limit = int(request.query_params.get("limit"))
+            ranked_users = User.objects.all().order_by('-points')[:limit]
+        else:
+            ranked_users = User.objects.all().order_by('-points')
+
+        # Tạo danh sách xếp hạng từ kết quả truy vấn
+        ranking_list = []
+        for index, user in enumerate(ranked_users, start=1):
+            ranking_list.append({
+                'order': index,
+                'id': user.id,
+                'username': user.username,
+                'points': user.points
+            })
+
+        # Serialize và trả về danh sách xếp hạng
+        serializer = RankingSerializer(ranking_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
