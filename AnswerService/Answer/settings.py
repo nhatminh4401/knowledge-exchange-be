@@ -31,8 +31,10 @@ DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "False") == "True"
 
 if DEVELOPMENT_MODE is True:
     USER_API_URL = "http://127.0.0.1:8001/"
+    QUESTION_API_URL = "http://127.0.0.1:8002/"
 else:
     USER_API_URL = "https://user-service-if4z3.ondigitalocean.app/"
+    QUESTION_API_URL = "https://question-service-8hs54.ondigitalocean.app/"
 
 # Application definition
 
