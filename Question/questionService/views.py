@@ -167,6 +167,10 @@ class QuestionAPI(APIView):
         if question_lst:
             srlz = QuestionSerializer(question_lst, many=True)
             for data in srlz.data:
+                tags = []
+                for t in data["tags"]:
+                    tags.append(Tag.objects.get(tag_ID = t).name)
+                data["tags"] = tags
                 links = ReferenceLink.objects.filter(question_ID = int(data["question_ID"]))
                 images = Image.objects.filter(question_ID = int(data["question_ID"]))
                 links_srlz = ReferenceLinkSerializer(links, many = True)
