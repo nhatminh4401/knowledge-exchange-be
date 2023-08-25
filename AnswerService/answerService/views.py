@@ -194,22 +194,28 @@ class ReferenceLinkAPI(APIView):
 
     @method_decorator(jwt_auth_required)
     def delete(self, request):
+        answer_id = request.data.get("id")
         try:
-            link = ReferenceLink.objects.get(ref_ID=request.data["id"])
-        except ObjectDoesNotExist:
-            return Response({"message": "Link not exist."}, status=404)
-        try:
-            answer = Answer.objects.get(answer_ID=link.answer_ID)
+            answer = Answer.objects.get(answer_ID=answer_id)
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
-        request_user = requests.get(USER_API_URL + "user/", headers={
+        request_user = requests.get("https://user-service-if4z3.ondigitalocean.app/user/", headers={
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
+
         if user_data["id"] != answer.user and user_data["isAdmin"] != True:
             return Response({"message": "User does not have permission."}, status=403)
 
-        link.delete()
-        return Response({"message": "Link deleted successfully."})
+        # Delete associated ReferenceLink objects
+        ReferenceLink.objects.filter(answer_ID=answer_id).delete()
+
+        # Delete associated Image objects
+        Image.objects.filter(answer_ID=answer_id).delete()
+
+        # Finally, delete the Answer object
+        answer.delete()
+
+        return Response({"message": "Answer and related data deleted successfully."})
 
 
 class ImageAPI(APIView):
