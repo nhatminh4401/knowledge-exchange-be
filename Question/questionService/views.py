@@ -90,15 +90,14 @@ class TagAPI(APIView):
     def put(self, request):
         try:
             action = request.query_params.get("action")
+            tag = Tag.objects.get(tag_ID = request.data["id"])
         except ObjectDoesNotExist:
             return Response({"message": "Tag not exist."}, status=404)
         if action == "tag":
-            tag = Tag.objects.get(tag_ID = request.data["id"])
             tag.questions.add(request.data["question_id"])
             return Response({"message": "Tagged."})
         elif action == "untag":
-            tag = Tag.objects.get(tag_ID = request.data["id"])
-            tag.questions.remove(request.data["question_id"])        
+            tag.questions.remove(request.data["question_id"])
             return Response({"message": "Untagged."})
         else:
             return Response({"message": "Unavailable action."})
