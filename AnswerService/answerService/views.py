@@ -28,53 +28,9 @@ def SaveFile(request):
 
 
 class AnswerAPI(APIView):
-    # @method_decorator(jwt_auth_required)
-    # def post(self, request):
-    #     answer = Answer()
-    #     answer.title = request.data["title"]
-    #     answer.content = request.data["content"]
-    #     answer.question_ID = request.data["question_id"]
-    #     request_user = requests.get(USER_API_URL + "user/", headers={
-    #                                 "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
-    #     url = "https://question-service-8hs54.ondigitalocean.app/questions?id={answer.answer_ID}"
-
-    #     request_question = requests.get(url)
-
-    #     answer_parent = Answer.objects.filter(question_ID=answer.answer_ID)
-    #     if not request_question.status_code == 404:
-    #         if not answer_parent:
-    #             return Response({"message": "Answer not exist."}, status=404)
-    #     else:
-    #         return Response({"message": "Question not exist."}, status=404)
-    #     if user_data["id"] != answer.user:
-    #         return Response({"message": "User does not have permission."}, status=403)
-    #     user_data = json.loads(request_user.content)
-    #     answer.user = user_data["id"]
-    #     # category = Category.objects.get(
-    #     #     category_ID=request.data["category_id"])
-    #     # answer.category = category
-    #     answer.save()
-    #     if "tags_id" in request.data.keys():
-    #         request_tags = request.data["tags_id"].split(",")
-    #         for tag in request_tags:
-    #             answer.tags.add(tag)
-    #     if "reference_links" in request.data.keys():
-    #         links = request.data["reference_links"].split(",")
-    #         for link in links:
-    #             new_link = ReferenceLink.objects.create(
-    #                 content=link, answer_ID=answer)
-    #     if "images" in request.data.keys():
-    #         images = request.FILES.getlist("images")
-    #         for image in images:
-    #             new_image = Image.objects.create(answer_ID=answer)
-    #             result = uploader.upload(
-    #                 image, public_id=new_image.img_ID, folder="UserApp", overwrite=True)
-    #             new_image.content = result["url"]
-    #             new_image.save()
-    #     return Response({"message": "Answer added successfully."})
     @method_decorator(jwt_auth_required)
     def post(self, request):
-        required_fields = ["title", "content",
+        required_fields = ["content",
                            "question_id"]  # Trường bắt buộc
 
         # Kiểm tra các trường bắt buộc
@@ -87,7 +43,6 @@ class AnswerAPI(APIView):
             return Response({"message": "Missing required field: question_id"}, status=400)
 
         answer = Answer()
-        answer.title = request.data["title"]
         answer.content = request.data["content"]
 
         user_data = None
@@ -141,7 +96,7 @@ class AnswerAPI(APIView):
 
     def get(self, request):
         # Danh sách các giá trị hợp lệ cho trường "sort"
-        valid_sort_values = ["created_date", "title"]
+        valid_sort_values = ["created_date", "content"]
 
         sort = "-created_date"
         search = ""
@@ -161,7 +116,7 @@ class AnswerAPI(APIView):
             search = request.query_params.get("search")
 
         answer_lst = Answer.objects.filter(
-            question_ID=question_id, title__contains=search).order_by(sort)
+            question_ID=question_id, content__contains=search).order_by(sort)
 
         if answer_lst:
             srlz = AnswerSerializer(answer_lst, many=True)
@@ -179,31 +134,21 @@ class AnswerAPI(APIView):
 
     @method_decorator(jwt_auth_required)
     def put(self, request):
+        answer_id = request.query_params.get("id")
         try:
-            answer = Answer.objects.get(
-                answer_ID=request.query_params.get("id"))
+            answer = Answer.objects.get(answer_ID=answer_id)
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
 
         request_user = requests.get(USER_API_URL + "user/", headers={
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
-        if "status" in request.data.keys():
-            if user_data["isAdmin"] == True:
-                answer.status = request.data["status"]
-                answer.save()
-            else:
-                return Response({"message": "You are not Administator."}, status=403)
+
         if user_data["id"] != answer.user:
             return Response({"message": "User does not have permission."}, status=403)
-        if "title" in request.data.keys():
-            answer.title = request.data["title"]
+
         if "content" in request.data.keys():
             answer.content = request.data["content"]
-        if "category_id" in request.data.keys():
-            category = Category.objects.get(
-                category_ID=request.data["category_id"])
-            answer.category = category
         answer.updated_date = datetime.now()
         answer.save()
         return self.get(request)
@@ -215,12 +160,19 @@ class AnswerAPI(APIView):
         user_data = json.loads(request_user.content)
         if user_data["id"] != answer.user and user_data["isAdmin"] != True:
             return Response({"message": "User does not have permission."}, status=403)
+        answer_id = request.data.get("id")
         try:
-            answer = Answer.objects.get(answer_ID=request.data["id"])
+            answer = Answer.objects.get(answer_ID=answer_id)
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
-        answer.delete()
 
+        request_user = requests.get("https://user-service-if4z3.ondigitalocean.app/user/", headers={
+                                    "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
+        user_data = json.loads(request_user.content)
+
+        if user_data["id"] != answer.user:
+            return Response({"message": "User does not have permission."}, status=403)
+        answer.delete()
         return Response({"message": "Answer deleted successfully."})
 
 

@@ -5,7 +5,6 @@ from django.db import models
 
 class Answer(models.Model):
     answer_ID = models.AutoField(primary_key=True)
-    title = models.CharField(max_length=100)
     content = models.CharField(max_length=1000)
     user = models.IntegerField()
     preAnswer_ID = models.IntegerField(null=True)
