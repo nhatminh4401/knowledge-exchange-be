@@ -200,6 +200,9 @@ class ReferenceLinkAPI(APIView):
         except ObjectDoesNotExist:
             return Response({"message": "Answer not exist."}, status=404)
         request_user = requests.get("https://user-service-if4z3.ondigitalocean.app/user/", headers={
+=======
+        request_user = requests.get(USER_API_URL + "user/", headers={
+>>>>>>> main
                                     "Authorization": request.META.get('HTTP_AUTHORIZATION', '')})
         user_data = json.loads(request_user.content)
 
