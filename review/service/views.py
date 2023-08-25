@@ -33,8 +33,12 @@ class ReviewQuestionAPI(APIView):
 
     def get(self, request):
         if request.query_params.get("id"):
-            review_lst = Review.objects.filter(
-                question_ID=request.query_params.get("id"))
+            if request.query_params.get("like"):
+                review_lst = Review.objects.filter(
+                question_ID=request.query_params.get("id"), like = 1)
+            else:
+                review_lst = Review.objects.filter(
+                    question_ID=request.query_params.get("id"))
         else:
             review_lst = Review.objects.all()
 
