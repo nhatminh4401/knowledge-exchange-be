@@ -38,6 +38,8 @@ else:
 
 CORS_ORIGIN_ALLOW_ALL = True  # enable all domains to access apis
 
+ADMIN_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2luZm8iOnsiaWQiOjIsInVzZXJuYW1lIjoibWluaCIsImVtYWlsIjoibWluaEBnbWFpbC5jb20iLCJpc0FkbWluIjp0cnVlLCJjcmVhdGVkX2F0IjoiMjAyMy0wOC0xNlQxNjo0Mjo1My42OTMyODFaIn0sImV4cCI6MjU1Njg4MTI5Mn0.NDAVjp0fVMC6nnAEXws4OYwkh5gRpfY28TBVFO-Pkhc"
+
 INSTALLED_APPS = [
     'questionService',
     'import_export',
@@ -47,9 +49,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

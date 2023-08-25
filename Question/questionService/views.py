@@ -12,7 +12,7 @@ from cloudinary import uploader
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.datastructures import MultiValueDictKeyError
-from Question.settings import USER_API_URL
+from Question.settings import USER_API_URL, ADMIN_TOKEN
 from django.http import HttpResponse
 from io import StringIO
 import csv
@@ -174,6 +174,10 @@ class QuestionAPI(APIView):
                 images_srlz = ImageSerializer(images, many = True)
                 data["reference_links"] = links_srlz.data
                 data["images"] = images_srlz.data
+                request_user = requests.get(USER_API_URL + "user/?id=" + str(data["user"]), headers={"Authorization": "Bearer " + ADMIN_TOKEN})
+                user_data = json.loads(request_user.content)
+                data["username"] = user_data["username"]
+                data["category_name"] = Category.objects.get(category_ID = data["category"]).name
             return Response(srlz.data)
         else:
             return Response({"message": "Question not exist."}, status=404)
