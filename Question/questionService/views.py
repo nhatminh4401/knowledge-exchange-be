@@ -349,7 +349,7 @@ class ResourceView(APIView):
                 return Response({"message": "Category not exist."}, status=404)  
             request_user = requests.get(USER_API_URL + "user/", headers={"Authorization":request.META.get('HTTP_AUTHORIZATION', '')})  
             user_data = json.loads(request_user.content)
-            question = Question.objects.create(title = i["title"], content = i["content"],user = user_data["id"], category = category)
+            question = Question.objects.create(title = i["title"], content = i["content"],user = user_data["id"], category = category, status = "Pending")
             if "tags" in i.keys():
                 i["tags"] = ast.literal_eval(i["tags"])
                 for t in i["tags"]:
