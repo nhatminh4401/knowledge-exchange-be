@@ -180,6 +180,7 @@ class QuestionAPI(APIView):
                 request_user = requests.get(USER_API_URL + "user/?id=" + str(data["user"]), headers={"Authorization": "Bearer " + ADMIN_TOKEN})
                 user_data = json.loads(request_user.content)
                 data["username"] = user_data["username"]
+                data["avatar"] = user_data["avatar"]
                 data["category_name"] = Category.objects.get(category_ID = data["category"]).name
             return Response(srlz.data)
         else:
